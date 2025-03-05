@@ -12,9 +12,12 @@ app.use(cookieParser())
 
 //routes import
 import dealerRouter from "./routes/dealer.routes.js";
+import customerRouter from "./routes/customer.routes.js"
 
 
 //routes declaration
 app.use("/api/v1/dealer",dealerRouter);
+app.use("api/v1/customer",customerRouter);
+
 
 export { app }
