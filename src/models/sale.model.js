@@ -21,6 +21,11 @@ const saleSchema = new Schema(
                 ref: "Product",
                 required: true
             },
+            productName:{
+                type:String,
+                required:true
+
+            },
             quantity: {
                 type: Number,
                 required: true,
@@ -49,11 +54,7 @@ const saleSchema = new Schema(
             min: 0
         },
       
-        paymentStatus: {
-            type: String,
-            enum: ["Paid", "Pending", "Partial"],
-            default: "Pending"
-        },
+       
        
         paymentDetails: {
             amountPaid: {

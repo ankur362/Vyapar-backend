@@ -9,15 +9,15 @@ const productSchema = new Schema(
         },
         rate: {
             type: Number,
-           
             min: 0
         },
         gstRate: {
             type: Number,
-           
             min: 0,
-            max: 28 
+            max: 28 ,
+    
         },
+       
         
         dealer: {
             type: Schema.Types.ObjectId,

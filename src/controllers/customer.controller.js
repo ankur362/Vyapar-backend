@@ -6,7 +6,7 @@ import { asyncHandler } from "../utils/asynchandler.js";
 // Create new customer with only name, email, phone
 const createCustomer = asyncHandler(async (req, res) => {
     const { name, email, phone } = req.body;
-    
+
     // Get dealer from auth middleware
     const dealerId = req.dealer._id;
 
@@ -16,9 +16,9 @@ const createCustomer = asyncHandler(async (req, res) => {
     }
 
     // Check if customer already exists with this email for this dealer
-    const existingCustomer = await Customer.findOne({ 
+    const existingCustomer = await Customer.findOne({
         email,
-        dealer: dealerId 
+        dealer: dealerId
     });
 
     if (existingCustomer) {
@@ -38,15 +38,14 @@ const createCustomer = asyncHandler(async (req, res) => {
     );
 });
 
-
 const updateCustomer = asyncHandler(async (req, res) => {
     const dealerId = req.dealer._id;
     const { customerId } = req.body;
 
     // Find customer
-    const customer = await Customer.findOne({ 
+    const customer = await Customer.findOne({
         _id: customerId,
-        dealer: dealerId 
+        dealer: dealerId
     });
 
     if (!customer) {
@@ -57,10 +56,10 @@ const updateCustomer = asyncHandler(async (req, res) => {
 
     // Check if the new email already exists for this dealer (if provided)
     if (email) {
-        const existingCustomer = await Customer.findOne({ 
+        const existingCustomer = await Customer.findOne({
             email,
             dealer: dealerId,
-            _id: { $ne: customerId } 
+            _id: { $ne: customerId }
         });
         if (existingCustomer) {
             throw new ApiError(400, "Email already in use");
@@ -81,12 +80,12 @@ const updateCustomer = asyncHandler(async (req, res) => {
     );
 });
 
-const deleteCustomer =asyncHandler(async(req,res)=>{
+const deleteCustomer = asyncHandler(async (req, res) => {
     const dealerId = req.dealer._id;
     const { customerId } = req.body;
-    const customer = await Customer.findOne({ 
+    const customer = await Customer.findOne({
         _id: customerId,
-        dealer: dealerId 
+        dealer: dealerId
     });
 
     if (!customer) {
@@ -100,27 +99,27 @@ const deleteCustomer =asyncHandler(async(req,res)=>{
 
 })
 const getOutstandingBill = asyncHandler(async (req, res) => {
-    const customerId=req.body;
+    const { customerId } = req.body;
+
 
     // Find customer by ID
     const customer = await Customer.findById(customerId);
-
-    if (!dealer) {
+    if (!customer) {
         throw new ApiError(404, "customer  not found");
     }
 
     return res.status(200).json(
-        new ApiResponse(200, { outstandingBill: customer.outStandingBill }, "Outstanding bill retrieved successfully")
+        new ApiResponse(200, { outstandingBill: customer.outstandingBill }, "Outstanding bill retrieved successfully")
     );
 });
 
 const getTotalBill = asyncHandler(async (req, res) => {
-    const customerId=req.body;
+    const { customerId } = req.body;
 
     // Find customer  by ID
     const customer = await Customer.findById(customerId);
 
-    if (!dealer) {
+    if (!customer) {
         throw new ApiError(404, "Customer not found");
     }
 
@@ -128,4 +127,11 @@ const getTotalBill = asyncHandler(async (req, res) => {
         new ApiResponse(200, { totalBill: customer.TotalBill }, "Total bill retrieved successfully")
     );
 });
-export { createCustomer, updateCustomer,deleteCustomer,getOutstandingBill,getTotalBill };
+
+export {
+    createCustomer,
+    updateCustomer,
+    deleteCustomer,
+    getOutstandingBill,
+    getTotalBill
+};

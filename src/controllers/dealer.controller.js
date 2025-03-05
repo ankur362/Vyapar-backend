@@ -287,6 +287,95 @@ const getTotalBill = asyncHandler(async (req, res) => {
         new ApiResponse(200, { totalBill: dealer.TotalBill }, "Total bill retrieved successfully")
     );
 });
+const recievePayment = asyncHandler(async (req, res) => {
+    const { customerId, amountPaid } = req.body;
+    const dealerId = req.dealer._id; // Assuming dealer info is in req
+
+    // Validate input
+    if (!customerId || !amountPaid || amountPaid <= 0) {
+        throw new ApiError(400, "Invalid payment details provided");
+    }
+
+    // Fetch customer
+    const customer = await Customer.findById(customerId);
+    if (!customer) {
+        throw new ApiError(404, "Customer not found");
+    }
+
+    // Fetch dealer
+    const dealer = await Dealer.findById(dealerId);
+    if (!dealer) {
+        throw new ApiError(404, "Dealer not found");
+    }
+
+    // Update customer balances
+    customer.TotalBill += amountPaid;
+    customer.outstandingBill -= amountPaid;
+    if (customer.outstandingBill < 0) customer.outstandingBill = 0;
+
+    // Update dealer balances
+    dealer.TotalBill += amountPaid;
+    dealer.outStandingBill -= amountPaid;
+    if (dealer.outStandingBill < 0) dealer.outStandingBill = 0;
+
+    // Save updates
+    await customer.save();
+    await dealer.save();
+
+    res.status(200).json({
+        success: true,
+        message: "Payment received successfully",
+        dealer: {
+            TotalBill: dealer.TotalBill,
+            OutstandingBill: dealer.outStandingBill,
+        },
+        customer: {
+            TotalBill: customer.TotalBill,
+            OutstandingBill: customer.outstandingBill,
+        }
+    });
+});
+const getWeeklySalesForDealer = async (dealerId) => {
+    const startOfWeek = new Date();
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay()); // Start of the week (Sunday)
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const salesThisWeek = await Sale.aggregate([
+        { $match: { dealer: dealerId, createdAt: { $gte: startOfWeek } } },
+        { $group: { _id: null, totalSales: { $sum: "$totalCost" } } }
+    ]);
+
+    return salesThisWeek[0]?.totalSales || 0;
+};
+
+const getMonthlySalesForDealer = async (dealerId) => {
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1); // Start of the month
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const salesThisMonth = await Sale.aggregate([
+        { $match: { dealer: dealerId, createdAt: { $gte: startOfMonth } } },
+        { $group: { _id: null, totalSales: { $sum: "$totalCost" } } }
+    ]);
+
+    return salesThisMonth[0]?.totalSales || 0;
+};
+const getCustomersWithPendingBalance = async (dealerId) => {
+    return await Customer.find({ 
+        dealer: dealerId, 
+        outstandingBill: { $gt: 0 } 
+    }).sort({ outstandingBill: -1 }).populate("dealer");
+};
+const getTopCustomersByBusinessValue = async (dealerId) => {
+    return await Customer.find({ dealer: dealerId })
+        .sort({ TotalBill: -1 }) // Highest business value first
+        .limit(10)
+        .populate("dealer");
+};
+
+
+
+
 
 export {
     registerDealer,
@@ -297,5 +386,12 @@ export {
     getCustomerById,
     getCustomerByName,
     getOutstandingBill,
-    getTotalBill
+    getTotalBill,
+    recievePayment,
+    getCustomersWithPendingBalance,
+    getWeeklySalesForDealer,
+    getMonthlySalesForDealer,
+    getTopCustomersByBusinessValue
+
+
 };
