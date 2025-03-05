@@ -99,4 +99,33 @@ const deleteCustomer =asyncHandler(async(req,res)=>{
 
 
 })
-export { createCustomer, updateCustomer,deleteCustomer };
+const getOutstandingBill = asyncHandler(async (req, res) => {
+    const customerId=req.body;
+
+    // Find customer by ID
+    const customer = await Customer.findById(customerId);
+
+    if (!dealer) {
+        throw new ApiError(404, "customer  not found");
+    }
+
+    return res.status(200).json(
+        new ApiResponse(200, { outstandingBill: customer.outStandingBill }, "Outstanding bill retrieved successfully")
+    );
+});
+
+const getTotalBill = asyncHandler(async (req, res) => {
+    const customerId=req.body;
+
+    // Find customer  by ID
+    const customer = await Customer.findById(customerId);
+
+    if (!dealer) {
+        throw new ApiError(404, "Customer not found");
+    }
+
+    return res.status(200).json(
+        new ApiResponse(200, { totalBill: customer.TotalBill }, "Total bill retrieved successfully")
+    );
+});
+export { createCustomer, updateCustomer,deleteCustomer,getOutstandingBill,getTotalBill };
