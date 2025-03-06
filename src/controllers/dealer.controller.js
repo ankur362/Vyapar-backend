@@ -5,6 +5,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asynchandler.js";
 import jwt from "jsonwebtoken";
 import { Customer } from "../models/customer.model.js";
+import { Sale } from "../models/sale.model.js";
 
 const registerDealer = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
@@ -335,9 +336,10 @@ const recievePayment = asyncHandler(async (req, res) => {
         }
     });
 });
-const getWeeklySalesForDealer = async (dealerId) => {
+const getWeeklySalesForDealer = asyncHandler(async (req, res) => {
+    const dealerId = req.dealer._id;
     const startOfWeek = new Date();
-    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay()); // Start of the week (Sunday)
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay()); 
     startOfWeek.setHours(0, 0, 0, 0);
 
     const salesThisWeek = await Sale.aggregate([
@@ -345,12 +347,16 @@ const getWeeklySalesForDealer = async (dealerId) => {
         { $group: { _id: null, totalSales: { $sum: "$totalCost" } } }
     ]);
 
-    return salesThisWeek[0]?.totalSales || 0;
-};
+    res.status(200).json({
+        success: true,
+        totalSales: salesThisWeek[0]?.totalSales || 0
+    });
+});
 
-const getMonthlySalesForDealer = async (dealerId) => {
+const getMonthlySalesForDealer = asyncHandler(async (req, res) => {
+    const dealerId = req.dealer._id;
     const startOfMonth = new Date();
-    startOfMonth.setDate(1); // Start of the month
+    startOfMonth.setDate(1);
     startOfMonth.setHours(0, 0, 0, 0);
 
     const salesThisMonth = await Sale.aggregate([
@@ -358,20 +364,46 @@ const getMonthlySalesForDealer = async (dealerId) => {
         { $group: { _id: null, totalSales: { $sum: "$totalCost" } } }
     ]);
 
-    return salesThisMonth[0]?.totalSales || 0;
-};
-const getCustomersWithPendingBalance = async (dealerId) => {
-    return await Customer.find({ 
+    res.status(200).json({
+        success: true,
+        totalSales: salesThisMonth[0]?.totalSales || 0
+    });
+});
+
+const getCustomersWithPendingBalance = asyncHandler(async (req, res) => {
+    const dealerId = req.dealer._id;
+    
+    const customers = await Customer.find({ 
         dealer: dealerId, 
         outstandingBill: { $gt: 0 } 
     }).sort({ outstandingBill: -1 }).populate("dealer");
-};
-const getTopCustomersByBusinessValue = async (dealerId) => {
-    return await Customer.find({ dealer: dealerId })
-        .sort({ TotalBill: -1 }) // Highest business value first
+
+    res.status(200).json({
+        success: true,
+        customers
+    });
+});
+
+const getTopCustomersByBusinessValue = asyncHandler(async (req, res) => {
+    const dealerId = req.dealer._id;
+
+    const customers = await Customer.find({ dealer: dealerId })
+        .sort({ TotalBill: -1 })
         .limit(10)
-        .populate("dealer");
-};
+        .populate({
+            path: "sale", // Ensure "sale" matches the field in your schema
+            model: "Sale",
+            populate: {
+                path: "products.productId", // If products need to be populated
+                model: "Product"
+            }
+        });
+
+    res.status(200).json({
+        success: true,
+        customers
+    });
+});
 
 
 
