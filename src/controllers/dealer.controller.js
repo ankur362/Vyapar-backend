@@ -6,6 +6,7 @@ import { asyncHandler } from "../utils/asynchandler.js";
 import jwt from "jsonwebtoken";
 import { Customer } from "../models/customer.model.js";
 import { Sale } from "../models/sale.model.js";
+import { MongoClient } from "mongodb";
 
 const registerDealer = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
@@ -44,7 +45,7 @@ const loginDealer = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Email and password are required");
     }
 
-    const dealer = await Dealer.findOne({ email });
+    const dealer = await Dealer.findOne({ email }); 
     if (!dealer) {
         throw new ApiError(404, "Dealer does not exist");
     }
@@ -54,18 +55,18 @@ const loginDealer = asyncHandler(async (req, res) => {
         throw new ApiError(401, "Invalid credentials");
     }
 
-
     const token = jwt.sign(
         { _id: dealer._id },
         process.env.JWT_SECRET,
         { expiresIn: "30d" }
     );
 
-    const loggedInDealer = await Dealer.findById(dealer._id).select("-password");
+   
+
 
     return res.status(200).json(
         new ApiResponse(200, {
-            dealer: loggedInDealer,
+            dealer: dealer,
             token
         }, "Dealer logged in successfully")
     );
@@ -259,6 +260,19 @@ const getCustomerById = asyncHandler(async (req, res) => {
         new ApiResponse(200, customer, "Customer retrieved successfully")
     );
 });
+const getallCustomer =asyncHandler(async(req,res)=>{
+    const {dealerId} = req.dealer._id;
+
+    
+    const customers = await Customer.find({ dealerId });
+
+    if (!customers.length) {
+        return res.status(404).json({ message: "No customers found for this dealer." });
+    }
+
+    res.status(200).json(new ApiResponse(200, customers, "Customer retrieved successfully"));
+} 
+)
 const getOutstandingBill = asyncHandler(async (req, res) => {
     const dealerId = req.dealer._id;
 
@@ -391,10 +405,10 @@ const getTopCustomersByBusinessValue = asyncHandler(async (req, res) => {
         .sort({ TotalBill: -1 })
         .limit(10)
         .populate({
-            path: "sale", // Ensure "sale" matches the field in your schema
+            path: "sale", 
             model: "Sale",
             populate: {
-                path: "products.productId", // If products need to be populated
+                path: "products.productId", 
                 model: "Product"
             }
         });
@@ -404,6 +418,7 @@ const getTopCustomersByBusinessValue = asyncHandler(async (req, res) => {
         customers
     });
 });
+
 
 
 
@@ -423,7 +438,6 @@ export {
     getCustomersWithPendingBalance,
     getWeeklySalesForDealer,
     getMonthlySalesForDealer,
-    getTopCustomersByBusinessValue
-
-
+    getTopCustomersByBusinessValue,
+    getallCustomer,
 };

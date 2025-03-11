@@ -13,7 +13,8 @@ import {
     getCustomersWithPendingBalance,
     getWeeklySalesForDealer,
     getMonthlySalesForDealer,
-    getTopCustomersByBusinessValue
+    getTopCustomersByBusinessValue,
+    getallCustomer
 } from "../controllers/dealer.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
@@ -36,6 +37,7 @@ router.get("/pending-balance", verifyJWT,getCustomersWithPendingBalance );
 router.get("/weekly-sale", verifyJWT, getWeeklySalesForDealer);
 router.get("/monthly-sale", verifyJWT, getMonthlySalesForDealer);
 router.get("/value-sale", verifyJWT, getTopCustomersByBusinessValue);
+router.get("/get-all-customer",verifyJWT,getallCustomer)
 
 
 export default router;

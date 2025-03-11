@@ -1,27 +1,44 @@
-import express from "express"
-import cookieParser from "cookie-parser"
+import express from "express";
+import cookieParser from "cookie-parser";
+import cors from "cors";
+import axios from "axios";
+import dotenv from "dotenv";
 
-const app = express()
+import { createCustomer } from "./controllers/customer.controller.js"; // Import customer creation function
+
+dotenv.config(); // Load environment variables
+
+const app = express();
+
+// Configure CORS
+app.use(
+    cors({
+        origin: "http://localhost:5173", // Allow frontend access
+        credentials: true,
+        methods: ["GET", "POST", "PUT", "DELETE"],
+        allowedHeaders: ["Content-Type", "Authorization"],
+    })
+);
+
+app.use(express.json({ limit: "16kb" }));
+app.use(express.urlencoded({ extended: true, limit: "16kb" }));
+app.use(express.static("public"));
+app.use(cookieParser());
 
 
-app.use(express.json({limit: "16kb"}))
-app.use(express.urlencoded({extended: true, limit: "16kb"}))
-app.use(express.static("public"))
-app.use(cookieParser())
 
-
-//routes import
+// Routes Import
 import dealerRouter from "./routes/dealer.routes.js";
-import customerRouter from "./routes/customer.routes.js"
-import productRouter from "./routes/product.routes.js"
-import saleRouter from "./routes/sale.route.js"
+import customerRouter from "./routes/customer.routes.js";
+import productRouter from "./routes/product.routes.js";
+import saleRouter from "./routes/sale.route.js";
+import { errorHandler } from "./middlewares/errorHandler.js";
 
+// Routes Declaration
+app.use("/api/v1/dealer", dealerRouter);
+app.use("/api/v1/customer", customerRouter);
+app.use("/api/v1/product", productRouter);
+app.use("/api/v1/sale", saleRouter);
+app.use(errorHandler);
 
-//routes declaration
-app.use("/api/v1/dealer",dealerRouter);
-app.use("/api/v1/customer",customerRouter);
-app.use("/api/v1/product",productRouter);
-app.use("/api/v1/sale",saleRouter);
-
-
-export { app }
+export { app };
