@@ -2,11 +2,11 @@ import { Dealer } from "../models/dealer.model.js";
 import bcrypt from "bcrypt";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import { asyncHandler } from "../utils/asynchandler.js";
 import jwt from "jsonwebtoken";
 import { Customer } from "../models/customer.model.js";
 import { Sale } from "../models/sale.model.js";
 import { MongoClient } from "mongodb";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 const registerDealer = asyncHandler(async (req, res) => {
     const { email, password } = req.body;

@@ -5,11 +5,12 @@ import { Product } from "../models/product.model.js";
 import { Sale } from "../models/sale.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import { asyncHandler } from "../utils/asynchandler.js";
+
 import easyinvoice from "easyinvoice";
 import fs from "fs";
 import nodemailer from "nodemailer";
 import { log } from "console";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 
 

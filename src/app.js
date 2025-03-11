@@ -38,5 +38,9 @@ app.use("/api/v1/customer", customerRouter);
 app.use("/api/v1/product", productRouter);
 app.use("/api/v1/sale", saleRouter);
 app.use(errorHandler);
+// Default Route (Fix for "Cannot GET /" issue)
+app.get("/", (req, res) => {
+    res.send(" API is running!");
+});
 
 export { app };
