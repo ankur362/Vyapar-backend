@@ -1,56 +1,52 @@
 import { Customer } from "../models/customer.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import { asyncHandler } from "../utils/asynchandler.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 // Create new customer with only name, email, phone
 const createCustomer = asyncHandler(async (req, res) => {
-   
     const { name, email, phone } = req.body;
-
-    // Get dealer from auth middleware
-    
     const dealerId = req.dealer._id;
-    
 
-    // Validation
     if (!email || !phone || !name) {
-        throw new ApiError(400, "Name, email and phone are required");
+        throw new ApiError(400, "Name, email, and phone are required");
     }
 
-    // Check if customer already exists with this email for this dealer
-    const existingCustomer = await Customer.findOne({
-        email,
-     
-        dealer: dealerId
-    });
-
+    const existingCustomer = await Customer.findOne({ email, dealer: dealerId });
     if (existingCustomer) {
-        throw new ApiError(400, "Customer with this email  already exists");
+        throw new ApiError(400, "Customer with this email already exists");
     }
-    const existingPhoneCustomer = await Customer.findOne({
-        phone,
-     
-        dealer: dealerId
-    });
 
+    const existingPhoneCustomer = await Customer.findOne({ phone, dealer: dealerId });
     if (existingPhoneCustomer) {
-        throw new ApiError(400, "Customer with this Phone already exists");
+        throw new ApiError(400, "Customer with this phone already exists");
     }
 
-    // Create customer with only required fields
-    const customer = await Customer.create({
-        name,
-        email,
-        phone,
-        dealer: dealerId
-    });
+    // Set SSE headers only once
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
 
+    try {
+        const customer = await Customer.create({
+            name,
+            email,
+            phone,
+            dealer: dealerId
+        });
 
-    return res.status(201).json(
-        new ApiResponse(200, customer, "Customer created successfully")
-    );
+        // Stream customer data
+        res.write(`data: ${JSON.stringify({ message: "Customer created successfully", customer })}\n\n`);
+
+        // End the stream properly
+        res.end();
+    } catch (error) {
+        res.write(`data: ${JSON.stringify({ error: "Error creating customer" })}\n\n`);
+        res.end();
+    }
 });
+
+
 
 const updateCustomer = asyncHandler(async (req, res) => {
     const dealerId = req.dealer._id;
