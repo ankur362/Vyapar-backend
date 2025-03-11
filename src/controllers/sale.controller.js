@@ -2,7 +2,7 @@ import express from "express";
 import { Customer } from "../models/customer.model.js";
 import { Dealer } from "../models/dealer.model.js";
 import { Product } from "../models/product.model.js";
-import { Sale } from "../models/sale.model.js";  
+import { Sale } from "../models/sale.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asynchandler.js";
@@ -42,21 +42,21 @@ const createSale = asyncHandler(async (req, res) => {
     const processedProducts = await Promise.all(
         products.map(async (prod) => {
             const { productId, quantity, rate, gstApplied } = prod;
-    
+
             // Validate product existence
             const productExists = await Product.findById(productId);
             if (!productExists) {
                 throw new ApiError(404, `Product with ID ${productId} not found`);
             }
-    
+
             // Calculate total cost per product
             const gstAmount = (rate * quantity * gstApplied) / 100;
             const totalProductCost = rate * quantity + gstAmount;
             totalCost += totalProductCost;
-    
+
             return {
                 productId,
-                productName: productExists.name, // Add productName from the database
+                productName: productExists.name,
                 quantity,
                 rate,
                 gstApplied,
@@ -64,12 +64,12 @@ const createSale = asyncHandler(async (req, res) => {
             };
         })
     );
-    
+
 
     // Calculate remaining amount
     const remainingAmount = totalCost - (amountPaid || 0);
 
-   
+
 
     // Create new sale entry
     const newSale = new Sale({
@@ -90,10 +90,10 @@ const createSale = asyncHandler(async (req, res) => {
     await Customer.findByIdAndUpdate(
         customerId,
         {
-            $push: { sale: newSale._id },  
+            $push: { sale: newSale._id },
             $inc: {
-                TotalBill: totalCost, 
-                outstandingBill: remainingAmount, 
+                TotalBill: totalCost,
+                outstandingBill: remainingAmount,
             }
         },
         { new: true }
@@ -104,8 +104,8 @@ const createSale = asyncHandler(async (req, res) => {
         dealerId,
         {
             $inc: {
-                TotalBill: totalCost, 
-                outStandingBill: remainingAmount, 
+                TotalBill: totalCost,
+                outStandingBill: remainingAmount,
             }
         },
         { new: true }
@@ -117,21 +117,14 @@ const createSale = asyncHandler(async (req, res) => {
 });
 
 
-
-
-
-
-
-
-
 // Define transporter outside of the function
 const transporter = nodemailer.createTransport({
     host: "smtp.gmail.com",
     port: 465, // Secure SSL port
-    secure: true, // Use SSL
+    secure: true,
     auth: {
-        user: process.env.EMAIL_USER, // Your email
-        pass: process.env.EMAIL_PASS  // App password (not your real password)
+        user: process.env.EMAIL_USER, //  email
+        pass: process.env.EMAIL_PASS  // App password 
     }
 });
 
@@ -148,14 +141,14 @@ const generateInvoice = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Sale not found");
     }
 
-    // Extract Dealer & Customer Details
+    // Dealer & Customer Details
     const dealerName = sale.dealer?.name || "Unknown Dealer";
     const customerName = sale.customer?.name || "Unknown Customer";
 
     // Format product details into a table structure
     const productDetails = sale.products.map(prod => ({
         quantity: prod.quantity,
-        description: prod.productName,  // Already stored in Sale model
+        description: prod.productName,
         price: prod.rate,
         "tax-rate": prod.gstApplied,
         total: prod.totalCost
@@ -196,8 +189,8 @@ const generateInvoice = asyncHandler(async (req, res) => {
     // Write PDF to a file
     fs.writeFileSync(filePath, pdfResult.pdf, "base64");
 
-    console.log("📧 EMAIL_USER:", process.env.EMAIL_USER);
-    console.log("🔑 EMAIL_PASS:", process.env.EMAIL_PASS ? "Loaded" : "Not Loaded");
+    console.log("EMAIL_USER:", process.env.EMAIL_USER);
+    console.log("EMAIL_PASS:", process.env.EMAIL_PASS ? "Loaded" : "Not Loaded");
 
     // Email options
     const mailOptions = {
@@ -219,7 +212,7 @@ const generateInvoice = asyncHandler(async (req, res) => {
         fs.unlinkSync(filePath);
 
         if (error) {
-            console.error("❌ Email Sending Error:", error);
+            console.error(" Email Sending Error:", error);
             return res.status(500).json({
                 success: false,
                 message: "Failed to send invoice via email",
@@ -227,7 +220,7 @@ const generateInvoice = asyncHandler(async (req, res) => {
             });
         }
 
-        console.log("✅ Email Sent Successfully:", info);
+        console.log("Email Sent Successfully:", info);
         return res.status(200).json({
             success: true,
             message: "Invoice sent successfully",

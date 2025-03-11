@@ -5,10 +5,13 @@ import { asyncHandler } from "../utils/asynchandler.js";
 
 // Create new customer with only name, email, phone
 const createCustomer = asyncHandler(async (req, res) => {
+   
     const { name, email, phone } = req.body;
 
     // Get dealer from auth middleware
+    
     const dealerId = req.dealer._id;
+    
 
     // Validation
     if (!email || !phone || !name) {
@@ -18,11 +21,21 @@ const createCustomer = asyncHandler(async (req, res) => {
     // Check if customer already exists with this email for this dealer
     const existingCustomer = await Customer.findOne({
         email,
+     
         dealer: dealerId
     });
 
     if (existingCustomer) {
-        throw new ApiError(400, "Customer with this email already exists");
+        throw new ApiError(400, "Customer with this email  already exists");
+    }
+    const existingPhoneCustomer = await Customer.findOne({
+        phone,
+     
+        dealer: dealerId
+    });
+
+    if (existingPhoneCustomer) {
+        throw new ApiError(400, "Customer with this Phone already exists");
     }
 
     // Create customer with only required fields
@@ -32,6 +45,7 @@ const createCustomer = asyncHandler(async (req, res) => {
         phone,
         dealer: dealerId
     });
+
 
     return res.status(201).json(
         new ApiResponse(200, customer, "Customer created successfully")

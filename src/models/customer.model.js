@@ -5,7 +5,8 @@ const customerSchema = new Schema(
         email: {
             type: String,
             required: true,
-            trim: true
+            trim: true,
+            unique:true,
         },
         name: {
             type: String,
@@ -19,6 +20,7 @@ const customerSchema = new Schema(
         phone: {
             type: Number,
             trim: true,
+            unique:true,
         },
         address: {
             type: String,
